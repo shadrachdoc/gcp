@@ -1,64 +1,65 @@
-name: 'Terraform GKE Deployment'
+name: Terraform CI/CD
 
 on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
     inputs:
       action:
-        description: 'Apply or Destroy'
+        description: 'Terraform action to perform'
         required: true
-        default: 'apply'
+        default: 'plan'
+        type: choice
         options:
-          - apply
-          - destroy
+        - plan
+        - apply
+        - destroy
+
+env:
+  TF_VERSION: '1.0.0'
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT }}
+  GCP_SA_KEY: ${{ secrets.GCP_CREDENTIALS }}
 
 jobs:
   terraform:
-    name: 'Terraform Apply or Destroy'
+    name: 'Terraform'
     runs-on: ubuntu-latest
 
     steps:
-      - name: 'Checkout GitHub repository'
-        uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
 
-      - name: 'Set up Terraform'
-        uses: hashicorp/setup-terraform@v1
-        with:
-          terraform_version: 1.0.0
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
 
-      - name: 'Configure Google Cloud credentials'
-        run: echo "${{ secrets.GCP_CREDENTIALS }}" > "gcp-key.json"
+    - name: Authenticate to Google Cloud
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
-      - name: 'Print JSON'
-        run: echo "${{ secrets.GCP_CREDENTIALS }}"
+    - name: Setup Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ env.GCP_PROJECT_ID }}
 
+    - name: Terraform Init
+      run: terraform init
 
-      - name: 'Validate JSON'
-        run: |
-          echo "${{ secrets.GCP_CREDENTIALS }}" | python -m json.tool > /dev/null || exit 1
+    - name: Terraform Format
+      run: terraform fmt -check
 
-      - name: 'Initialize Terraform'
-        run: terraform init
+    - name: Terraform Plan
+      if: github.event.inputs.action == 'plan' || github.event_name == 'pull_request'
+      run: terraform plan
 
-      - name: 'Terraform Plan'
-        run: |
-          if [ "${{ github.event.inputs.action }}" == "apply" ]; then
-            terraform plan -out=tfplan
-          fi
+    - name: Terraform Apply
+      if: github.event.inputs.action == 'apply' && github.event_name == 'workflow_dispatch'
+      run: terraform apply -auto-approve
 
-      - name: 'Terraform Apply'
-        if: ${{ github.event.inputs.action == 'apply' }}
-        run: terraform apply -auto-approve tfplan
-
-      - name: 'Terraform Destroy'
-        if: ${{ github.event.inputs.action == 'destroy' }}
-        run: terraform destroy -auto-approve
-
-      - name: 'Commit Terraform State to GitHub'
-        if: ${{ github.event.inputs.action == 'apply' }}
-        run: |
-          git config user.email "you@example.com"
-          git config user.name "Your Name"
-          git checkout -b terraform-state
-          git add terraform.tfstate
-          git commit -m "Update Terraform state"
-          git push origin terraform-state
+    - name: Terraform Destroy
+      if: github.event.inputs.action == 'destroy' && github.event_name == 'workflow_dispatch'
+      run: terraform destroy -auto-approve
