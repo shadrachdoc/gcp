@@ -1,5 +1,5 @@
 provider "google" {
-  credentials = file("path/to/your/service/account.json") // Replace this with the actual path in your environment
+  credentials = file(var.gcp_credentials_file)
   project     = var.project
   region      = var.region
   zone        = var.zone
