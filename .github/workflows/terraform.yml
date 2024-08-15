@@ -1,13 +1,19 @@
 name: 'Terraform GKE Deployment'
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Apply or Destroy'
+        required: true
+        default: 'apply'
+        options:
+          - apply
+          - destroy
 
 jobs:
   terraform:
-    name: 'Terraform Apply'
+    name: 'Terraform Apply or Destroy'
     runs-on: ubuntu-latest
 
     steps:
@@ -26,12 +32,21 @@ jobs:
         run: terraform init
 
       - name: 'Terraform Plan'
-        run: terraform plan -out=tfplan
+        run: |
+          if [ "${{ github.event.inputs.action }}" == "apply" ]; then
+            terraform plan -out=tfplan
+          fi
 
       - name: 'Terraform Apply'
+        if: ${{ github.event.inputs.action == 'apply' }}
         run: terraform apply -auto-approve tfplan
 
+      - name: 'Terraform Destroy'
+        if: ${{ github.event.inputs.action == 'destroy' }}
+        run: terraform destroy -auto-approve
+
       - name: 'Commit Terraform State to GitHub'
+        if: ${{ github.event.inputs.action == 'apply' }}
         run: |
           git config user.email "you@example.com"
           git config user.name "Your Name"
