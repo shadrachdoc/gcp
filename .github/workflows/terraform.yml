@@ -20,7 +20,6 @@ on:
 env:
   TF_VERSION: '1.0.0'
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT }}
-  GCP_SA_KEY: ${{ secrets.GCP_CREDENTIALS }}
 
 jobs:
   terraform:
@@ -39,7 +38,7 @@ jobs:
     - name: Authenticate to Google Cloud
       uses: 'google-github-actions/auth@v1'
       with:
-        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+        credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
 
     - name: Setup Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
@@ -54,12 +53,31 @@ jobs:
 
     - name: Terraform Plan
       if: github.event.inputs.action == 'plan' || github.event_name == 'pull_request'
-      run: terraform plan
+      run: terraform plan -out=tfplan
 
     - name: Terraform Apply
       if: github.event.inputs.action == 'apply' && github.event_name == 'workflow_dispatch'
-      run: terraform apply -auto-approve
+      run: |
+        terraform apply -auto-approve tfplan
+        git config --global user.name 'GitHub Actions'
+        git config --global user.email 'actions@github.com'
+        git add terraform.tfstate
+        git commit -m "Update Terraform state" || echo "No changes to commit"
+        git push
 
     - name: Terraform Destroy
       if: github.event.inputs.action == 'destroy' && github.event_name == 'workflow_dispatch'
-      run: terraform destroy -auto-approve
+      run: |
+        terraform destroy -auto-approve
+        git config --global user.name 'GitHub Actions'
+        git config --global user.email 'actions@github.com'
+        git add terraform.tfstate
+        git commit -m "Update Terraform state after destroy" || echo "No changes to commit"
+        git push
+
+    - name: Upload Terraform Plan
+      if: github.event.inputs.action == 'plan' || github.event_name == 'pull_request'
+      uses: actions/upload-artifact@v2
+      with:
+        name: tfplan
+        path: tfplan
