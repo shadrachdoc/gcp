@@ -27,7 +27,11 @@ jobs:
 
       - name: 'Configure Google Cloud credentials'
         run: echo "${{ secrets.GCP_CREDENTIALS }}" > "gcp-key.json"
-        
+
+      - name: 'Print JSON'
+        run: echo "${{ secrets.GCP_CREDENTIALS }}"
+
+
       - name: 'Validate JSON'
         run: |
           echo "${{ secrets.GCP_CREDENTIALS }}" | python -m json.tool > /dev/null || exit 1
