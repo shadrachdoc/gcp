@@ -27,6 +27,10 @@ jobs:
 
       - name: 'Configure Google Cloud credentials'
         run: echo "${{ secrets.GCP_CREDENTIALS }}" > "gcp-key.json"
+        
+      - name: 'Validate JSON'
+        run: |
+          echo "${{ secrets.GCP_CREDENTIALS }}" | python -m json.tool > /dev/null || exit 1
 
       - name: 'Initialize Terraform'
         run: terraform init
