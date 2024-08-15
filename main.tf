@@ -1,8 +1,8 @@
 terraform {
-  cloud {
-    organization = "your-org-name"
+cloud {
+    organization = "mypro"
     workspaces {
-      name = "your-workspace-name"
+      name = "gcp"
     }
   }
 }
