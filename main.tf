@@ -6,7 +6,7 @@ provider "google" {
 }
 
 resource "google_container_cluster" "primary" {
-  name     = "gke-cluster"
+  name     = "gke-cluster-test0815"
   location = var.zone
 
   initial_node_count = 1
