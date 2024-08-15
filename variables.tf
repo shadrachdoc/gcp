@@ -12,7 +12,8 @@ variable "zone" {
   type        = string
   description = "The zone in which to provision resources."
 }
-variable "gcp_credentials_file" {
-  description = "Path to the GCP service account JSON file"
+variable "credentials" {
+  description = "The contents of a GCP service account key file in JSON format"
   type        = string
+  sensitive   = true
 }
