@@ -1,3 +1,11 @@
+terraform {
+  cloud {
+    organization = "your-org-name"
+    workspaces {
+      name = "your-workspace-name"
+    }
+  }
+}
 provider "google" {
   project = var.project
   region  = var.region
