@@ -19,10 +19,9 @@ on:
 
 env:
   TF_VERSION: '1.3.9'
-  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT }}
   TF_CLOUD_ORGANIZATION: "mypro"
   TF_WORKSPACE: "gcp"
-
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
 
 jobs:
   terraform:
@@ -44,57 +43,27 @@ jobs:
     - name: Authenticate to Google Cloud
       uses: 'google-github-actions/auth@v1'
       with:
-        credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
     - name: Setup Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
       with:
         project_id: ${{ env.GCP_PROJECT_ID }}
 
+    - name: Terraform Format
+      run: terraform fmt -check
+
     - name: Terraform Init
       run: terraform init
 
-    - name: Terraform Format
-      run: |
-        if ! terraform fmt -check; then
-          echo "Terraform files are not properly formatted. Running terraform fmt..."
-          terraform fmt
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'shadrachdoc@gmail.com'
-          git add .
-          git commit -m "Auto-format Terraform files" || echo "No changes to commit"
-          git push
-          echo "Terraform files have been formatted. Please check the updated files."
-          exit 1
-        fi
-
     - name: Terraform Plan
       if: github.event.inputs.action == 'plan' || github.event_name == 'pull_request'
-      run: terraform plan -out=tfplan
+      run: terraform plan
 
     - name: Terraform Apply
       if: github.event.inputs.action == 'apply' && github.event_name == 'workflow_dispatch'
-      run: |
-        terraform apply -auto-approve tfplan
-        git config --global user.name 'GitHub Actions'
-        git config --global user.email 'actions@github.com'
-        git add terraform.tfstate
-        git commit -m "Update Terraform state" || echo "No changes to commit"
-        git push
+      run: terraform apply -auto-approve
 
     - name: Terraform Destroy
       if: github.event.inputs.action == 'destroy' && github.event_name == 'workflow_dispatch'
-      run: |
-        terraform destroy -auto-approve
-        git config --global user.name 'GitHub Actions'
-        git config --global user.email 'actions@github.com'
-        git add terraform.tfstate
-        git commit -m "Update Terraform state after destroy" || echo "No changes to commit"
-        git push
-
-    - name: Upload Terraform Plan
-      if: github.event.inputs.action == 'plan' || github.event_name == 'pull_request'
-      uses: actions/upload-artifact@v2
-      with:
-        name: tfplan
-        path: tfplan
+      run: terraform destroy -auto-approve
