@@ -26,7 +26,7 @@ jobs:
           terraform_version: 1.0.0
 
       - name: 'Configure Google Cloud credentials'
-        run: echo "${{ secrets.GCP_CREDENTIALS }}" > "${{ github.workspace }}/gcp-key.json"
+        run: echo "${{ secrets.GCP_CREDENTIALS }}" > "gcp-key.json"
 
       - name: 'Initialize Terraform'
         run: terraform init
