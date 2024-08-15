@@ -1,6 +1,7 @@
 terraform {
-  cloud {
+  backend "remote" {
     organization = "mypro"
+
     workspaces {
       name = "gcp"
     }
