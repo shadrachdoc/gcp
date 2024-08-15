@@ -1,11 +1,12 @@
-terraform {
-  backend "remote" {
-    organization = "mypro"
+terraform { 
+  cloud { 
+    
+    organization = "mypro" 
 
-    workspaces {
-      name = "gcp"
-    }
-  }
+    workspaces { 
+      name = "gcp" 
+    } 
+  } 
 }
 provider "google" {
   project = var.project
