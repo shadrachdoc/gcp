@@ -1,5 +1,5 @@
 terraform {
-cloud {
+  cloud {
     organization = "mypro"
     workspaces {
       name = "gcp"
