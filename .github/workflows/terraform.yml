@@ -1,0 +1,41 @@
+name: 'Terraform GKE Deployment'
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    name: 'Terraform Apply'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 'Checkout GitHub repository'
+        uses: actions/checkout@v2
+
+      - name: 'Set up Terraform'
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.0
+
+      - name: 'Configure Google Cloud credentials'
+        run: echo "${{ secrets.GCP_CREDENTIALS }}" > "${{ github.workspace }}/gcp-key.json"
+
+      - name: 'Initialize Terraform'
+        run: terraform init
+
+      - name: 'Terraform Plan'
+        run: terraform plan -out=tfplan
+
+      - name: 'Terraform Apply'
+        run: terraform apply -auto-approve tfplan
+
+      - name: 'Commit Terraform State to GitHub'
+        run: |
+          git config user.email "you@example.com"
+          git config user.name "Your Name"
+          git checkout -b terraform-state
+          git add terraform.tfstate
+          git commit -m "Update Terraform state"
+          git push origin terraform-state
