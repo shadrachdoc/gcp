@@ -55,15 +55,23 @@ jobs:
 
     - name: Terraform Init
       run: terraform init
+      env:
+        TF_VAR_credentials: ${{ secrets.GCP_CREDENTIALS }}
 
     - name: Terraform Plan
       if: github.event.inputs.action == 'plan' || github.event_name == 'pull_request'
       run: terraform plan
+      env:
+        TF_VAR_credentials: ${{ secrets.GCP_CREDENTIALS }}
 
     - name: Terraform Apply
       if: github.event.inputs.action == 'apply' && github.event_name == 'workflow_dispatch'
       run: terraform apply -auto-approve
+      env:
+        TF_VAR_credentials: ${{ secrets.GCP_CREDENTIALS }}
 
     - name: Terraform Destroy
       if: github.event.inputs.action == 'destroy' && github.event_name == 'workflow_dispatch'
       run: terraform destroy -auto-approve
+      env:
+        TF_VAR_credentials: ${{ secrets.GCP_CREDENTIALS }}
