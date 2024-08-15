@@ -1,12 +1,12 @@
-terraform { 
-  cloud { 
-    
-    organization = "mypro" 
+terraform {
+  cloud {
 
-    workspaces { 
-      name = "gcp" 
-    } 
-  } 
+    organization = "mypro"
+
+    workspaces {
+      name = "gcp"
+    }
+  }
 }
 provider "google" {
   project = var.project
