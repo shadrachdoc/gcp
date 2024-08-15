@@ -49,7 +49,18 @@ jobs:
       run: terraform init
 
     - name: Terraform Format
-      run: terraform fmt -check
+      run: |
+        if ! terraform fmt -check; then
+          echo "Terraform files are not properly formatted. Running terraform fmt..."
+          terraform fmt
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'shadrachdoc@gmail.com'
+          git add .
+          git commit -m "Auto-format Terraform files" || echo "No changes to commit"
+          git push
+          echo "Terraform files have been formatted. Please check the updated files."
+          exit 1
+        fi
 
     - name: Terraform Plan
       if: github.event.inputs.action == 'plan' || github.event_name == 'pull_request'
