@@ -16,6 +16,15 @@ on:
         - plan
         - apply
         - destroy
+      module:
+        description: 'Terraform module to target'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+        - gke-cluster
+        - another-module
+        - all
 
 env:
   TF_VERSION: '1.3.9'
@@ -59,19 +68,55 @@ jobs:
         TF_VAR_credentials: ${{ secrets.GCP_CREDENTIALS }}
 
     - name: Terraform Plan
-      if: github.event.inputs.action == 'plan' || github.event_name == 'pull_request'
-      run: terraform plan
+      if: (github.event.inputs.action == 'plan' || github.event_name == 'pull_request') && github.event.inputs.module == 'gke-cluster'
+      run: terraform plan -target=module.gke_cluster
+      env:
+        TF_VAR_credentials: ${{ secrets.GCP_CREDENTIALS }}
+
+    - name: Terraform Plan (Another Module)
+      if: (github.event.inputs.action == 'plan' || github.event_name == 'pull_request') && github.event.inputs.module == 'another-module'
+      run: terraform plan -target=module.another_module
       env:
         TF_VAR_credentials: ${{ secrets.GCP_CREDENTIALS }}
 
     - name: Terraform Apply
-      if: github.event.inputs.action == 'apply' && github.event_name == 'workflow_dispatch'
-      run: terraform apply -auto-approve
+      if: github.event.inputs.action == 'apply' && github.event_name == 'workflow_dispatch' && github.event.inputs.module == 'gke-cluster'
+      run: terraform apply -target=module.gke_cluster -auto-approve
+      env:
+        TF_VAR_credentials: ${{ secrets.GCP_CREDENTIALS }}
+
+    - name: Terraform Apply (Another Module)
+      if: github.event.inputs.action == 'apply' && github.event_name == 'workflow_dispatch' && github.event.inputs.module == 'another-module'
+      run: terraform apply -target=module.another_module -auto-approve
       env:
         TF_VAR_credentials: ${{ secrets.GCP_CREDENTIALS }}
 
     - name: Terraform Destroy
-      if: github.event.inputs.action == 'destroy' && github.event_name == 'workflow_dispatch'
+      if: github.event.inputs.action == 'destroy' && github.event_name == 'workflow_dispatch' && github.event.inputs.module == 'gke-cluster'
+      run: terraform destroy -target=module.gke_cluster -auto-approve
+      env:
+        TF_VAR_credentials: ${{ secrets.GCP_CREDENTIALS }}
+
+    - name: Terraform Destroy (Another Module)
+      if: github.event.inputs.action == 'destroy' && github.event_name == 'workflow_dispatch' && github.event.inputs.module == 'another-module'
+      run: terraform destroy -target=module.another_module -auto-approve
+      env:
+        TF_VAR_credentials: ${{ secrets.GCP_CREDENTIALS }}
+
+    - name: Terraform Plan (All Modules)
+      if: (github.event.inputs.action == 'plan' || github.event_name == 'pull_request') && github.event.inputs.module == 'all'
+      run: terraform plan
+      env:
+        TF_VAR_credentials: ${{ secrets.GCP_CREDENTIALS }}
+
+    - name: Terraform Apply (All Modules)
+      if: github.event.inputs.action == 'apply' && github.event_name == 'workflow_dispatch' && github.event.inputs.module == 'all'
+      run: terraform apply -auto-approve
+      env:
+        TF_VAR_credentials: ${{ secrets.GCP_CREDENTIALS }}
+
+    - name: Terraform Destroy (All Modules)
+      if: github.event.inputs.action == 'destroy' && github.event_name == 'workflow_dispatch' && github.event.inputs.module == 'all'
       run: terraform destroy -auto-approve
       env:
         TF_VAR_credentials: ${{ secrets.GCP_CREDENTIALS }}
