@@ -23,15 +23,15 @@ provider "google" {
 }
 
 module "gke_cluster" {
-  source            = "./terraform-modules/gke-cluster"
-  cluster_name      = "gke-cluster-test0815"
-  location          = var.zone
+  source             = "./terraform-modules/gke-cluster"
+  cluster_name       = "gke-cluster-test0815"
+  location           = var.zone
   initial_node_count = 1
-  machine_type      = "e2-medium"
-  project           = var.project
-  region            = var.region
-  zone              = var.zone
-  credentials       = var.credentials
+  machine_type       = "e2-medium"
+  project            = var.project
+  region             = var.region
+  zone               = var.zone
+  credentials        = var.credentials
 }
 
 output "cluster_name" {
